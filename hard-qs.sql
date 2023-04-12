@@ -1,4 +1,53 @@
+with fp as (
+  select 
+    x.user_id, 
+    x.purchase_date 
+  from 
+    (
+      select 
+        up.*, 
+        row_number() over(
+          PARTITION BY up.user_id 
+          order by 
+            up.purchase_date
+        ) as rn 
+      from 
+        user_purchases up
+    ) x 
+  where 
+    x.rn = 1
+), 
+tot as (
+  select 
+    count(DISTINCT user_id) as tots 
+  from 
+    signups
+) 
+SELECT 
+  round(
+    (
+      100.0 * count(DISTINCT fp.user_id)/(
+        select 
+          tots 
+        from 
+          tot
+      )
+    ), 
+    2
+  ) as same_week_purchases_pct 
+from 
+  fp 
+  join signups sp on sp.user_id = fp.user_id 
+where 
+  extract(
+    'days' 
+    from 
+      (
+        fp.purchase_date - sp.signup_date
+      )
+  ) <= 7
 
+-----------------------------------------------
 with need as (
   select 
     x.user_id, 
