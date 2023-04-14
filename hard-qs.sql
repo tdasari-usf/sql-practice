@@ -1,3 +1,55 @@
+
+with need as(
+  select 
+    ep.employee_id, 
+    ep.engagement_id, 
+    client_name 
+  from 
+    consulting_engagements ce 
+    join employees ep on ep.engagement_id = ce.engagement_id
+), 
+a as(
+  select 
+    need.client_name, 
+    COUNT(DISTINCT employee_id) as total_staffed 
+  from 
+    need 
+  group by 
+    need.client_name
+), 
+ne as (
+  select 
+    distinct(m.employee_id) as non_excl 
+  from 
+    need m 
+    join need n on m.employee_id = n.employee_id 
+    and m.client_name <> n.client_name
+), 
+b as(
+  select 
+    client_name, 
+    sum(
+      case when employee_id in (
+        select 
+          non_excl 
+        from 
+          ne
+      ) then 0 else 1 end
+    ) as exclusive_staffed 
+  from 
+    need 
+  group by 
+    client_name
+) 
+select 
+  a.client_name, 
+  total_staffed, 
+  exclusive_staffed 
+from 
+  a 
+  join b on a.client_name = b.client_name
+------------------------------------------------------------
+
 with fp as (
   select 
     x.user_id, 
