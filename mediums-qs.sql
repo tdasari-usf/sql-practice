@@ -74,3 +74,11 @@ from
 where 
   y.rn < 3;
 
+------------------------------
+-- get second highest salary, get NULL if there is no second highest
+--salary
+SELECT
+   MAX(a.Salary) as SecondHighestSalary
+  FROM Employee a
+  JOIN Employee b
+    ON a.Salary < b.Salary
